@@ -1,0 +1,192 @@
+body {
+    background-color: #2C1B3A;
+    color: white;
+    font-family: Poppins, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+    margin: 0;
+}
+
+.logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 150px;
+}
+
+.container {
+    display: flex;
+    width: 80%;
+    background-color: #321f42;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.column {
+    flex: 1;
+    padding: 20px;
+}
+
+#camera {
+    width: 100%;
+    height: 300px;
+    background-color: black;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+button {
+    background-color: #2C1B3A;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    margin: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #1E90FF;
+}
+
+button.middle {
+    font-size: 20px;
+}
+
+.player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+}
+
+#currentSongTitle {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    color: #1E90FF;
+    user-select: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 5px;
+    background-color: #3f3248;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress {
+    height: 5px;
+    background-color: #1E90FF;
+    width: 0%;
+    border-radius: 5px;
+}
+
+.song-list {
+    margin-top: 20px;
+    width: 80%;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-left: 0;
+}
+
+.song-list li {
+    list-style: none;
+    padding: 5px;
+    border-bottom: 1px solid #46354f;
+    cursor: pointer;
+    user-select: none;
+}
+
+.song-list li:hover {
+    background-color: #1E90FF;
+    color: white;
+}
+
+.song-list li.active {
+    background-color: #1E90FF;
+    font-weight: bold;
+}
+
+.login-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #372248;
+}
+
+.login-button:hover {
+    background-color: #5D2D6B;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 10px;
+}
+
+#termsModal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    color: #000;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: justify;
+}
+
+#acceptTerms {
+    padding: 10px 20px;
+    background: #2C1B3A;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.gesture-box {
+    position: absolute;
+    top: 50%;
+    left: 110%;
+    background-color: #1E90FF;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+
