@@ -1,72 +1,112 @@
-import os
-import json
-import base64
-import cv2
-import numpy as np
-from io import BytesIO
-from PIL import Image
-from django.conf import settings
-from django.http import JsonResponse
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Protocol, Iterable
+
+from django.forms import ModelForm
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.urls import reverse_lazy
+from django.views import View
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
-from .model.gesture_detector import GestureDetector
-
-# Inicializa el detector solo una vez
-detector = GestureDetector()
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def detectar_gesto(request):
-    try:
-        data = json.loads(request.body)
-        image_data = data.get("image")
-        if not image_data:
-            return JsonResponse({"error": "No se envió imagen"}, status=400)
-
-        header, encoded = image_data.split(",", 1)
-        img_bytes = base64.b64decode(encoded)
-        img = Image.open(BytesIO(img_bytes))
-        img_np = np.array(img)
-        # Convertir PIL a OpenCV
-        img_cv = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-
-        result, error_msg = detector.process_image(img_cv)
-        if error_msg:
-            return JsonResponse({"error": error_msg}, status=200)
-
-        gesture_name = result["gesture_name"]
-
-        return JsonResponse({"gesto": gesture_name})
-
-    except Exception as e:
-        print("Error procesando gesto:", e)
-        return JsonResponse({"error": str(e)}, status=500)
+from .models import Task
 
 
 def home(request):
     return render(request, 'index.html')
 
 
-def terminos(request):
-    return render(request, 'terminos.html')
+# Dependency inversion via repository abstraction
+class TaskRepository(Protocol):
+    def list(self) -> Iterable[Task]:
+        ...
+
+    def create(self, title: str, description: str) -> Task:
+        ...
+
+    def update(self, task: Task, **fields) -> Task:
+        ...
+
+    def delete(self, task: Task) -> None:
+        ...
 
 
-def login(request):
-    return render(request, 'login.html')
+class DjangoORMTaskRepository:
+    def list(self) -> Iterable[Task]:
+        return Task.objects.active()
+
+    def create(self, title: str, description: str) -> Task:
+        return Task.objects.create(title=title, description=description)
+
+    def update(self, task: Task, **fields) -> Task:
+        for key, value in fields.items():
+            setattr(task, key, value)
+        task.save()
+        return task
+
+    def delete(self, task: Task) -> None:
+        task.delete()
 
 
-def lista_canciones(request):
-    carpeta_audio = os.path.join(settings.BASE_DIR, 'static', 'audio')
-    archivos = []
+# Strategy pattern for sorting tasks
+class TaskSortStrategy(Protocol):
+    def sort(self, tasks: Iterable[Task]) -> Iterable[Task]:
+        ...
 
-    if os.path.exists(carpeta_audio):
-        for archivo in os.listdir(carpeta_audio):
-            if archivo.endswith('.mp3'):
-                archivos.append({
-                    'nombre': os.path.splitext(archivo)[0].replace('_', ' ').capitalize(),
-                    'ruta': f'/static/audio/{archivo}'
-                })
 
-    return JsonResponse({'canciones': archivos})
+class SortByCreatedDesc:
+    def sort(self, tasks: Iterable[Task]) -> Iterable[Task]:
+        return sorted(tasks, key=lambda t: t.created_at, reverse=True)
+
+
+class SortByTitleAsc:
+    def sort(self, tasks: Iterable[Task]) -> Iterable[Task]:
+        return sorted(tasks, key=lambda t: t.title.lower())
+
+
+@dataclass
+class TaskListService:
+    repo: TaskRepository
+    sorter: TaskSortStrategy
+
+    def list_tasks(self) -> Iterable[Task]:
+        return self.sorter.sort(self.repo.list())
+
+
+class TaskForm(ModelForm):
+    class Meta:
+        model = Task
+        fields = ["title", "description", "status"]
+
+
+class TaskListView(ListView):
+    model = Task
+    template_name = "task_list.html"
+    context_object_name = "tasks"
+
+    def get_queryset(self):
+        repo = DjangoORMTaskRepository()
+        sort_key = self.request.GET.get("sort", "created")
+        sorter: TaskSortStrategy = SortByCreatedDesc() if sort_key == "created" else SortByTitleAsc()
+        service = TaskListService(repo=repo, sorter=sorter)
+        return list(service.list_tasks())
+
+
+class TaskCreateView(CreateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "task_form.html"
+    success_url = reverse_lazy("task_list")
+
+
+class TaskUpdateView(UpdateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "task_form.html"
+    success_url = reverse_lazy("task_list")
+
+
+class TaskDeleteView(DeleteView):
+    model = Task
+    template_name = "task_confirm_delete.html"
+    success_url = reverse_lazy("task_list")
