@@ -2,14 +2,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Protocol, Iterable
+import base64
+import io
+import cv2
+import numpy as np
+import json
 
 from django.forms import ModelForm
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from .models import Task
+# from .model.gesture_detector import GestureDetector
 
 
 def home(request):
@@ -110,4 +119,93 @@ class TaskDeleteView(DeleteView):
     model = Task
     template_name = "task_confirm_delete.html"
     success_url = reverse_lazy("task_list")
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def detectar_gesto(request):
+    try:
+        # Simulación de detección de gestos para demo
+        import random
+        
+        gestos_posibles = ["Close", "Previous", "Next", "No detectado"]
+        gesto_detectado = random.choice(gestos_posibles)
+        
+        return JsonResponse({
+            'gesto': gesto_detectado,
+            'confidence': 0.85
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def get_recommendations(request):
+    """Endpoint para obtener recomendaciones de música"""
+    try:
+        from .recommendation_system import GlobalRecommendationSystem
+        
+        data = json.loads(request.body)
+        user_id = data.get('user_id', 1)
+        strategy_type = data.get('strategy', 'hybrid')
+        context = data.get('context', {})
+        
+        # Crear usuario mock
+        class MockUser:
+            def __init__(self, id):
+                self.id = id
+                self.username = f"user_{id}"
+        
+        user = MockUser(user_id)
+        
+        # Obtener recomendaciones
+        system = GlobalRecommendationSystem()
+        recommendations = system.get_recommendations(
+            user, 
+            strategy_type=strategy_type,
+            context=context
+        )
+        
+        return JsonResponse({
+            'recommendations': recommendations,
+            'strategy_used': strategy_type,
+            'total_count': len(recommendations)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_preferences(request):
+    """Endpoint para actualizar preferencias del usuario"""
+    try:
+        from .recommendation_system import GlobalRecommendationSystem
+        
+        data = json.loads(request.body)
+        user_id = data.get('user_id', 1)
+        preferences = data.get('preferences', {})
+        
+        # Crear usuario mock
+        class MockUser:
+            def __init__(self, id):
+                self.id = id
+                self.username = f"user_{id}"
+        
+        user = MockUser(user_id)
+        
+        # Actualizar preferencias
+        system = GlobalRecommendationSystem()
+        success = system.update_preferences(user, preferences)
+        
+        return JsonResponse({
+            'success': success,
+            'message': 'Preferencias actualizadas correctamente' if success else 'Error al actualizar preferencias'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 

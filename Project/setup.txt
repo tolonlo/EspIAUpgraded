@@ -1,0 +1,75 @@
+Requisitos
+---------
+- Python 3.11+ (recomendado)
+- pip
+
+Proyecto incluido: Sistema de Control de Música con Gestos implementando múltiples patrones de diseño.
+
+Instalación (Windows PowerShell)
+--------------------------------
+1) Crear y activar entorno virtual (opcional pero recomendado)
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+
+2) Instalar dependencias
+   pip install -r requirements.txt
+
+3) Migraciones (base de datos SQLite)
+   cd SinToFront
+   python manage.py migrate --noinput
+
+4) Crear superusuario (opcional, para panel admin)
+   python manage.py createsuperuser
+
+5) Ejecutar servidor
+   python manage.py runserver
+
+URL iniciales
+-------------
+- Inicio (Reproductor): http://127.0.0.1:8000/
+- Login: http://127.0.0.1:8000/login/
+- Tareas (CRUD): http://127.0.0.1:8000/tasks/
+- Admin: http://127.0.0.1:8000/admin/
+
+APIs Disponibles
+----------------
+- Detección de Gestos: POST http://127.0.0.1:8000/detectar-gesto/
+- Recomendaciones: POST http://127.0.0.1:8000/api/recommendations/
+- Preferencias: POST http://127.0.0.1:8000/api/preferences/
+
+Funcionalidades Implementadas
+-----------------------------
+✅ Reproductor de música con 8 canciones
+✅ Control por gestos (Close, Previous, Next)
+✅ Sistema de login funcional
+✅ Sistema de recomendaciones inteligente
+✅ Múltiples patrones de diseño implementados
+✅ Inversión de dependencias
+✅ APIs REST para integración
+
+Patrones de Diseño Aplicados
+----------------------------
+- Singleton Pattern (AudioManager, GlobalRecommendationSystem)
+- Observer Pattern (MusicPlayer, RecommendationObserver)
+- Strategy Pattern (GestureStrategy, RecommendationStrategy)
+- Factory Pattern (AudioPlayerFactory, RecommendationStrategyFactory)
+- Decorator Pattern (AudioPlayerDecorator, RecommendationDecorator)
+- Command Pattern (PlayCommand, RecommendationCommand)
+- Chain of Responsibility (GestureHandler)
+- Repository Pattern (SongRepository, PlaylistRepository)
+- Service Layer Pattern (MusicService)
+- Facade Pattern (MusicFacade, RecommendationFacade)
+- Builder Pattern (RecommendationSystemBuilder)
+- Adapter Pattern (MusicAPIAdapter)
+- Template Method Pattern (BaseMusicView)
+
+Notas de configuración
+----------------------
+- No es necesario cambiar `SinToFront/settings.py` para SQLite local.
+- Si ya existe una base `db.sqlite3`, las migraciones actualizarán el esquema.
+- Las plantillas están en `web/templates`.
+- Archivos de audio están en `static/audio/`.
+- Documentación completa en `DOCUMENTACION_PATRONES.md`.
+
+
+

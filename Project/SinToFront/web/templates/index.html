@@ -13,13 +13,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             position: relative;
+            margin: 0;
+            padding: 20px;
         }
 
         .container {
             display: flex;
-            width: 80%;
+            width: 90%;
+            max-width: 1200px;
             background-color: #321f42;
             padding: 20px;
             border-radius: 10px;
@@ -38,6 +41,7 @@
             background-color: black;
             border-radius: 10px;
             overflow: hidden;
+            position: relative;
         }
 
         video {
@@ -46,9 +50,12 @@
             object-fit: cover;
         }
 
+        #canvas {
+            display: none;
+        }
+
         button {
             background-color: #2C1B3A;
-            /* Fondo igual al de la web */
             color: white;
             border: none;
             padding: 8px 18px;
@@ -60,11 +67,9 @@
         }
         button:hover {
             background-color: #1E90FF;
-            /* Color al pasar el mouse */
         }
         button.middle {
             font-size: 20px;
-            /* Botón medio más grande */
         }
 
         .player {
@@ -82,24 +87,34 @@
             margin-bottom: 10px;
             border-radius: 5px;
             position: relative;
+            cursor: pointer;
         }
         .progress {
             height: 5px;
             background-color: #1E90FF;
-            width: 50%;
+            width: 0%;
             border-radius: 5px;
+            transition: width 0.1s;
         }
-
 
         .song-list {
             margin-top: 20px;
-            width: 80%;
+            width: 100%;
             text-align: left;
         }
         .song-list li {
             list-style: none;
-            padding: 5px;
+            padding: 8px;
             border-bottom: 1px solid #46354f;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .song-list li:hover {
+            background-color: #46354f;
+        }
+        .song-list li.active {
+            background-color: #1E90FF;
+            color: white;
         }
 
         .login-button {
@@ -118,17 +133,42 @@
             margin-top: 10px;
             gap: 10px;
         }
-        .tasks-link {
-            position: absolute;
-            left: 10px;
-            top: 10px;
-            background-color: #1E90FF;
+
+        #gestureBox {
+            background-color: #46354f;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+            min-height: 30px;
+        }
+
+        #currentSongTitle {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #1E90FF;
+        }
+
+        .gesture-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #46354f;
+            border-radius: 5px;
+        }
+
+        .gesture-info h4 {
+            margin: 0 0 10px 0;
+            color: #1E90FF;
+        }
+
+        .gesture-info p {
+            margin: 5px 0;
+            font-size: 14px;
         }
     </style>
 </head>
 
 <body>
-    <a class="login-button tasks-link" href="/tasks/">Ir a Tareas</a>
     <button class="login-button" onclick="login()">Login/Connect</button>
     <div class="container">
         <div class="column">
@@ -137,12 +177,22 @@
                 <video id="video" autoplay></video>
             </div>
             <button onclick="toggleCamera()">Encender/Apagar Cámara</button>
+            
+            <div class="gesture-info">
+                <h4>Control por Gestos</h4>
+                <p><strong>Close (Puño cerrado):</strong> Play/Pause</p>
+                <p><strong>Previous (Gesto anterior):</strong> Siguiente canción</p>
+                <p><strong>Next (Gesto siguiente):</strong> Canción anterior</p>
+            </div>
+            
+            <div id="gestureBox">Esperando activar cámara...</div>
         </div>
 
         <div class="column">
-            <h2>Reproductor</h2>
+            <h2>Reproductor de Música</h2>
             <div class="player">
-                <div class="progress-bar">
+                <div id="currentSongTitle">Selecciona una canción</div>
+                <div class="progress-bar" id="progressBar">
                     <div class="progress"></div>
                 </div>
                 <div class="controls">
@@ -152,40 +202,303 @@
                 </div>
             </div>
 
-
             <h3>Lista de Canciones</h3>
+            
+            <!-- Botones para recomendaciones -->
+            <div style="margin-bottom: 15px;">
+                <button onclick="getRecommendations()" style="background-color: #1E90FF; margin-right: 10px;">
+                    🎯 Obtener Recomendaciones
+                </button>
+                <button onclick="updatePreferences()" style="background-color: #28a745;">
+                    ⚙️ Actualizar Preferencias
+                </button>
+            </div>
+            
             <ul class="song-list" id="songList">
-                <li>Canción 1</li>
-                <li>Canción 2</li>
-                <li>Canción 3</li>
+                <!-- Las canciones se cargarán dinámicamente -->
             </ul>
         </div>
-
     </div>
+
+    <!-- Elemento de audio oculto -->
+    <audio id="audioPlayer" preload="metadata"></audio>
+    <canvas id="canvas"></canvas>
+
     <script>
+        // Configuración de canciones
+        const canciones = [
+            { nombre: "La Quemona", archivo: "/static/audio/cancion1.mp3" },
+            { nombre: "El perdedor", archivo: "/static/audio/cancion2.mp3" },
+            { nombre: "El condor herido", archivo: "/static/audio/cancion3.mp3" },
+            { nombre: "Hermans Habit", archivo: "/static/audio/Hermans.mp3" },
+            { nombre: "Techo de astros y truenos", archivo: "/static/audio/Margarita.mp3" },
+            { nombre: "Moanin", archivo: "/static/audio/Moanin.mp3" },
+            { nombre: "The pink panther theme", archivo: "/static/audio/Pink.mp3" },
+            { nombre: "Quitamancha", archivo: "/static/audio/Rescate.mp3" }
+        ];
+
+        let currentIndex = 0;
+        const audio = document.getElementById("audioPlayer");
+        const songList = document.getElementById("songList");
+        const progress = document.querySelector(".progress");
+        const playButton = document.querySelector(".middle");
+        const currentSongTitle = document.getElementById("currentSongTitle");
+        const progressBar = document.getElementById("progressBar");
+
+        function cargarCanciones() {
+            songList.innerHTML = "";
+            canciones.forEach((c, i) => {
+                const li = document.createElement("li");
+                li.textContent = c.nombre;
+                li.onclick = () => {
+                    currentIndex = i;
+                    reproducirCancion();
+                };
+                songList.appendChild(li);
+            });
+            actualizarListaActiva();
+        }
+
+        function actualizarListaActiva() {
+            const items = songList.querySelectorAll("li");
+            items.forEach((item, i) => {
+                item.classList.toggle("active", i === currentIndex);
+            });
+        }
+
+        function reproducirCancion() {
+            audio.src = canciones[currentIndex].archivo;
+            // NO reproducir automáticamente - solo cargar la canción
+            playButton.textContent = "▶";
+            actualizarListaActiva();
+            currentSongTitle.textContent = canciones[currentIndex].nombre;
+        }
+
+        function manualPlay() {
+            if (audio.paused) {
+                audio.play();
+                playButton.textContent = "⏸";
+            } else {
+                audio.pause();
+                playButton.textContent = "▶";
+            }
+        }
+
+        function manualNext() {
+            currentIndex = (currentIndex + 1) % canciones.length;
+            reproducirCancion();
+        }
+
+        function manualPrev() {
+            currentIndex = (currentIndex - 1 + canciones.length) % canciones.length;
+            reproducirCancion();
+        }
+
+        audio.ontimeupdate = () => {
+            if (audio.duration) {
+                const porcentaje = (audio.currentTime / audio.duration) * 100;
+                progress.style.width = porcentaje + "%";
+            }
+        };
+
+        audio.onended = () => {
+            playButton.textContent = "▶";
+        };
+
+        progressBar.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const porcentaje = clickX / width;
+            audio.currentTime = porcentaje * audio.duration;
+        });
+
+        // Cargar canciones al iniciar
+        cargarCanciones();
+
         let video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
         let cameraOn = false;
 
         function toggleCamera() {
             if (cameraOn) {
-                video.srcObject.getTracks().forEach(track => track.stop());
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                video.srcObject = null;
                 cameraOn = false;
             } else {
                 navigator.mediaDevices.getUserMedia({ video: true })
                     .then(stream => {
                         video.srcObject = stream;
                         cameraOn = true;
+                        startGestureLoop();
                     })
                     .catch(error => console.error("Error al acceder a la cámara", error));
             }
         }
 
-        function manualPlay() { console.log("Reproducir"); }
-        function manualPause() { console.log("Pausar"); }
-        function manualNext() { console.log("Siguiente"); }
-        function manualPrev() { console.log("Anterior"); }
+        function startGestureLoop() {
+            const gestureBox = document.getElementById("gestureBox");
+
+            setInterval(() => {
+                if (!cameraOn || video.readyState < 2) {
+                    gestureBox.textContent = "Esperando cámara...";
+                    return;
+                }
+
+                gestureBox.textContent = "Analizando gesto...";
+                enviarImagen();
+            }, 2000); // Cada 2 segundos
+        }
+
+        function enviarImagen() {
+            const context = canvas.getContext("2d");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL("image/jpeg");
+            console.log("Imagen capturada:", imageData.substring(0, 100));
+
+            fetch("/detectar-gesto/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Gesto detectado:", data.gesto);
+                gestureBox.textContent = `Gesto detectado: ${data.gesto}`;
+                interpretarGesto(data.gesto);
+            })
+            .catch(error => {
+                console.error("Error en detección de gesto:", error);
+                gestureBox.textContent = "Error al detectar gesto.";
+            });
+        }
+
+        function interpretarGesto(gesto) {
+            switch (gesto) {
+                case "Close":
+                    manualPlay();
+                    break;
+                case "Previous":
+                    manualNext();
+                    break;
+                case "Next":
+                    manualPrev();
+                    break;
+                default:
+                    console.log("Gesto no reconocido");
+            }
+        }
+
+        function getCSRFToken() {
+            return document.cookie.match(/csrftoken=([^;]+)/)[1];
+        }
+
         function login() {
-            window.location.href = "login.html";
+            // Redirigir a la página de login
+            window.location.href = "/login/";
+        }
+
+        // Sistema de recomendaciones
+        async function getRecommendations() {
+            try {
+                const response = await fetch('/api/recommendations/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        user_id: 1,
+                        strategy: 'hybrid',
+                        context: {
+                            current_song: canciones[currentIndex]?.nombre || '',
+                            mood: 'happy'
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('🎵 Recomendaciones:', data.recommendations);
+                
+                // Mostrar recomendaciones en la interfaz
+                showRecommendations(data.recommendations);
+                
+            } catch (error) {
+                console.error('Error al obtener recomendaciones:', error);
+            }
+        }
+
+        function showRecommendations(recommendations) {
+            const songList = document.getElementById('songList');
+            const originalContent = songList.innerHTML;
+            
+            // Crear lista de recomendaciones
+            let recommendationsHTML = '<h4>🎯 Recomendaciones para ti:</h4>';
+            recommendations.forEach((rec, index) => {
+                recommendationsHTML += `<li onclick="playRecommendation('${rec.title}', '${rec.artist}')" style="background-color: #1E90FF; color: white; cursor: pointer;">
+                    ${rec.title} - ${rec.artist} (Score: ${rec.score?.toFixed(2) || 'N/A'})
+                </li>`;
+            });
+            
+            // Mostrar recomendaciones temporalmente
+            songList.innerHTML = recommendationsHTML;
+            
+            // Restaurar lista original después de 10 segundos
+            setTimeout(() => {
+                songList.innerHTML = originalContent;
+                cargarCanciones();
+            }, 10000);
+        }
+
+        function playRecommendation(title, artist) {
+            // Buscar si la canción recomendada está en nuestra lista
+            const songIndex = canciones.findIndex(song => 
+                song.nombre.toLowerCase().includes(title.toLowerCase())
+            );
+            
+            if (songIndex !== -1) {
+                currentIndex = songIndex;
+                reproducirCancion();
+                manualPlay(); // Reproducir automáticamente la recomendación
+            } else {
+                alert(`🎵 Canción recomendada: ${title} - ${artist}\n\nEsta canción no está disponible en tu biblioteca local.`);
+            }
+        }
+
+        // Función para actualizar preferencias del usuario
+        async function updatePreferences() {
+            try {
+                const response = await fetch('/api/preferences/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        user_id: 1,
+                        preferences: {
+                            genres: ['Pop', 'Rock', 'Jazz'],
+                            artists: ['Artist A', 'Artist B'],
+                            mood: 'happy',
+                            listening_history: canciones.map(song => song.nombre)
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('✅ Preferencias actualizadas:', data.message);
+                
+            } catch (error) {
+                console.error('Error al actualizar preferencias:', error);
+            }
         }
     </script>
 </body>

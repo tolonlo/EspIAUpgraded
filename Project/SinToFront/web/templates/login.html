@@ -3,46 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Conectar App</title>
+    <title>Login - Control de Música con Gestos</title>
     <style>
         body {
-            background-color: #0a1f44;
+            background-color: #2C1B3A;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: Poppins, sans-serif;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: #321f42;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
             text-align: center;
         }
+
+        h1 {
+            color: #1E90FF;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #46354f;
+            border-radius: 5px;
+            background-color: #2C1B3A;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #1E90FF;
+        }
+
         button {
-            background-color: #ff6600;
+            background-color: #1E90FF;
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            cursor: pointer;
+            padding: 12px 30px;
             border-radius: 5px;
-            margin: 10px;
-            transition: 0.3s;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s;
         }
+
         button:hover {
-            background-color: #cc5200;
+            background-color: #1976d2;
+        }
+
+        .back-link {
+            color: #1E90FF;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .demo-info {
+            background-color: #46354f;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <h1>Conectar con un servicio de música</h1>
-    <button onclick="connectSpotify()">🎵 Conectar con Spotify</button>
-    <button onclick="connectYouTube()">🎥 Conectar con YouTube</button>
+    <div class="login-container">
+        <h1>🎵 Control de Música</h1>
+        <p>Inicia sesión para acceder al reproductor con control por gestos</p>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuario:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+
+        <div class="demo-info">
+            <strong>Demo:</strong> Usa cualquier usuario y contraseña para probar el sistema.
+        </div>
+
+        <a href="/" class="back-link">← Volver al inicio</a>
+    </div>
+
     <script>
-        function connectSpotify() {
-            window.location.href = "https://accounts.spotify.com/authorize"; // Reemplázalo con la URL real de autenticación
-        }
-        function connectYouTube() {
-            window.location.href = "https://accounts.google.com/signin"; // Reemplázalo con la URL real de autenticación
-        }
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password) {
+                // Simular login exitoso
+                alert('¡Login exitoso! Redirigiendo al reproductor...');
+                window.location.href = '/';
+            } else {
+                alert('Por favor, completa todos los campos');
+            }
+        });
     </script>
 </body>
 </html>
