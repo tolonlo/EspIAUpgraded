@@ -175,6 +175,5 @@ function interpretarGesto(gesto) {
 }
 
 function getCSRFToken() {
-    const match = document.cookie.match(/csrftoken=([^;]+)/);
-    return match ? match[1] : "";
+    return document.cookie.match(/csrftoken=([^;]+)/)[1];
 }

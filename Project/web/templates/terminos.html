@@ -1,11 +1,34 @@
-{% load static %}
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
     <title>Términos y Condiciones</title>
-    <link rel="stylesheet" href="{% static 'css/styles-terminos.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #2C1B3A;
+        }
+        a {
+            color: #1E90FF;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: auto;
+        }
+    </style>
 </head>
 <body>
     <div class="content">
@@ -22,7 +45,7 @@
             <li>El usuario debe revisar periódicamente estos términos.</li>
         </ul>
         <p>Para dudas o sugerencias, contacte al equipo de desarrollo del proyecto universitario.</p>
-        <p><a href="/home">Volver a la página principal</a></p>
+        <p><a href="index.html">Volver a la página principal</a></p>
     </div>
 </body>
 </html>

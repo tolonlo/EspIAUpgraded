@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if object %}Editar{% else %}Nueva{% endif %} Tarea</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        label { display:block; margin-top: 1rem; }
+        input[type=text], textarea, select { width: 400px; max-width: 100%; }
+        button { margin-top: 1rem; }
+        a { color: #1E90FF; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>{% if object %}Editar{% else %}Nueva{% endif %} Tarea</h1>
+    <p><a href="/tasks/">Volver</a></p>
+    <form method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Guardar</button>
+    </form>
+</body>
+</html>
+
+
+
+

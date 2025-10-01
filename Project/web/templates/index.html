@@ -7,7 +7,157 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Control de Playlist con Gestos</title>
-    <link rel="stylesheet" href="{% static 'css/styles-home.css' %}">
+    <style>
+        body {
+            background-color: #2C1B3A;
+            color: white;
+            font-family: Poppins, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            margin: 0;
+        }
+
+        /* Logo */
+        .logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 150px;
+            height: auto;
+        }
+
+        .container {
+            display: flex;
+            width: 80%;
+            background-color: #321f42;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .column {
+            flex: 1;
+            padding: 20px;
+        }
+
+        #camera {
+            width: 100%;
+            height: 300px;
+            background-color: black;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        button {
+            background-color: #2C1B3A;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            margin: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1E90FF;
+        }
+
+        button.middle {
+            font-size: 20px;
+        }
+
+        .player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        #currentSongTitle {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            color: #1E90FF;
+            user-select: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background-color: #3f3248;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer; /* para indicar que es interactiva */
+        }
+
+        .progress {
+            height: 5px;
+            background-color: #1E90FF;
+            width: 0%;
+            border-radius: 5px;
+        }
+
+        .song-list {
+            margin-top: 20px;
+            width: 80%;
+            text-align: left;
+            padding-left: 0;
+            max-height: 150px; /* ajusta según el tamaño que quieres para 5 canciones */
+            overflow-y: auto;  /* activa scroll vertical si el contenido supera la altura */
+        }
+
+        .song-list li {
+            list-style: none;
+            padding: 5px;
+            border-bottom: 1px solid #46354f;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .song-list li:hover {
+            background-color: #1E90FF;
+            color: white;
+        }
+
+        .song-list li.active {
+            background-color: #1E90FF;
+            font-weight: bold;
+        }
+
+        .login-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #372248;
+        }
+
+        .login-button:hover {
+            background-color: #5D2D6B;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -22,15 +172,8 @@
             <h2>Cámara</h2>
             <div id="camera">
                 <video id="video" autoplay></video>
-                <canvas id="canvas" style="display: none;"></canvas>
             </div>
-            <div style="position: relative; display: inline-block;">
-                <button onclick="toggleCamera()">Encender/Apagar Cámara</button>
-                <p id="gestureBox" class="gesture-box" style="margin-top: 10px; padding: 10px; border: 2px solid #333; border-radius: 5px;">
-                    Esperando detección de gesto...
-                </p>
-                <button onclick="enviarImagen()">Enviar imagen</button>
-            </div>
+            <button onclick="toggleCamera()">Encender/Apagar Cámara</button>
         </div>
 
         <div class="column">
@@ -72,10 +215,125 @@
         </ul>
         <button id="acceptTerms" style="padding: 10px 20px; background:#2C1B3A; color:white; border:none; border-radius:5px; cursor:pointer;">Aceptar</button>
     </div>
-
 </div>
 
- <script src="{% static 'js/app.js' %}"></script>
+<script>
+    document.getElementById('acceptTerms').addEventListener('click', () => {
+        document.getElementById('termsModal').style.display = 'none';
+    });
+</script>
+
+    <script>
+        const canciones = [
+            { nombre: "La Quemona", archivo: "{% static 'audio/cancion1.mp3' %}" },
+            { nombre: "El perdedor", archivo: "{% static 'audio/cancion2.mp3' %}" },
+            { nombre: "El condor herido", archivo: "{% static 'audio/cancion3.mp3' %}" },
+            { nombre: "Hermans Habit", archivo: "{% static 'audio/Hermans.mp3' %}" },
+            { nombre: "Techo de astros y truenos", archivo: "{% static 'audio/Margarita.mp3' %}" },
+            { nombre: "Moanin", archivo: "{% static 'audio/Moanin.mp3' %}" },
+            { nombre: "The pink panther theme", archivo: "{% static 'audio/Pink.mp3' %}" },
+            { nombre: "Quitamancha", archivo: "{% static 'audio/Rescate.mp3' %}" }
+        ];
+
+        let currentIndex = 0;
+        const audio = document.getElementById("audioPlayer");
+        const songList = document.getElementById("songList");
+        const progress = document.querySelector(".progress");
+        const playButton = document.querySelector(".middle");
+        const currentSongTitle = document.getElementById("currentSongTitle");
+        const progressBar = document.getElementById("progressBar");
+
+        function cargarCanciones() {
+            songList.innerHTML = "";
+            canciones.forEach((c, i) => {
+                const li = document.createElement("li");
+                li.textContent = c.nombre;
+                li.onclick = () => {
+                    currentIndex = i;
+                    reproducirCancion();
+                };
+                songList.appendChild(li);
+            });
+            actualizarListaActiva();
+        }
+
+        function actualizarListaActiva() {
+            const items = songList.querySelectorAll("li");
+            items.forEach((item, i) => {
+                item.classList.toggle("active", i === currentIndex);
+            });
+        }
+
+        function reproducirCancion() {
+            audio.src = canciones[currentIndex].archivo;
+            audio.play();
+            playButton.textContent = "⏸";
+            actualizarListaActiva();
+            currentSongTitle.textContent = canciones[currentIndex].nombre;  // Actualizamos el título aquí
+        }
+
+        function manualPlay() {
+            if (audio.paused) {
+                audio.play();
+                playButton.textContent = "⏸";
+            } else {
+                audio.pause();
+                playButton.textContent = "▶";
+            }
+        }
+
+        function manualNext() {
+            currentIndex = (currentIndex + 1) % canciones.length;
+            reproducirCancion();
+        }
+
+        function manualPrev() {
+            currentIndex = (currentIndex - 1 + canciones.length) % canciones.length;
+            reproducirCancion();
+        }
+
+        audio.ontimeupdate = () => {
+            if (audio.duration) {
+                const porcentaje = (audio.currentTime / audio.duration) * 100;
+                progress.style.width = porcentaje + "%";
+            }
+        };
+
+        audio.onended = () => {
+            playButton.textContent = "▶";
+        };
+
+        // Aquí la barra de progreso es clickeable para adelantar/retroceder la canción
+        progressBar.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const porcentaje = clickX / width;
+            audio.currentTime = porcentaje * audio.duration;
+        });
+
+        cargarCanciones();
+
+        let video = document.getElementById('video');
+        let cameraOn = false;
+
+        function toggleCamera() {
+            if (cameraOn) {
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                video.srcObject = null;
+                cameraOn = false;
+            } else {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        video.srcObject = stream;
+                        cameraOn = true;
+                    })
+                    .catch(error => console.error("Error al acceder a la cámara", error));
+            }
+        }
+    </script>
 </body>
 
 </html>

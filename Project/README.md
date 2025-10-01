@@ -1,70 +1,35 @@
-# SinTo – Reconocimiento de gestos con Django + TensorFlow + Mediapipe
+# EspIA
 
-Este proyecto es una aplicación web construida con Django que permite detectar gestos de mano mediante la cámara del navegador. Utiliza un modelo entrenado con TensorFlow Lite y la detección de puntos clave de la mano proporcionada por Mediapipe.
+## Description
+EspIA is a web application that allows users to control Spotify playlists through hand gestures, using a camera to interpret commands such as play, pause, skip tracks, and like a song.
 
----
+## Project Status
+Currently, the development is in its initial phase with a **frontend implemented in React**. The integration with the Spotify API and the backend in Django are still pending.
 
-## Funcionalidades
+## Technologies
+- **Frontend:** React with TailwindCSS
+- **Backend (future):** Django with Django REST Framework
+- **Database (future):** SQLite
+- **Version Control:** Git and GitHub
 
-- Captura de imagen desde la cámara web del usuario.
-- Detección de gestos con un modelo `.tflite`.
-- Control de acciones (como reproducir música, cambiar canción, etc.) según el gesto detectado.
-- Compatible con despliegue en plataformas como Render.com.
-
----
-
-## Requisitos
-
-### Python
-- Python 3.10
-
-### Dependencias
-
-Estas son las principales dependencias usadas en el proyecto:
-
-```txt
-Django
-Pillow
-numpy
-opencv-python
-tensorflow-cpu==2.18.0
-mediapipe
-gunicorn
-dj-database-url
-whitenoise
-requests
-social-auth-app-django
-```
-
-## Instalación local
-### Clona el repositorio
-
-```bash
+## Installation & Usage
+1. Clone the repository:
+   ```sh
    git clone https://github.com/DisakHK/espIA
    cd espIA
-```
-### Crea y activa un entorno virtual
+   ```
 
-```bash
-   python -m venv venv
-   source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
-### Instala los paquetes
+2. Install frontend dependencies:
+   ```sh
+   npm install
+   ```
 
-```bash
-   pip install -r requirements.txt
-```
-### Migraciones y archivos estáticos
+3. Run the frontend in development mode:
+   ```sh
+   npm run dev
+   ```
 
-```bash
-   python manage.py migrate
-   python manage.py collectstatic
-```
-### Ejecuta el servidor
-
-```bash
-   python manage.py runserver
-```
-
-## Creditos
-Recomendamos visitar el repositorio de https://github.com/kinivi/hand-gesture-recognition-mediapipe de donde nos basamos para entrenar y usar el modelo.
+## Current Features
+Frontend structure in React.  
+TailwindCSS setup.  
+Pending: Integration with the Spotify API and backend.  
